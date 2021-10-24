@@ -1,7 +1,7 @@
 import { Api } from "./api.js";
 
 var apiKey = process.env.API_KEY;
-var api = new Api(apiKey || '61531a36ddf621d59e852734');
+var api = new Api(apiKey);
 
 export class CryptoAlgorithm {
     async runOnce() {
