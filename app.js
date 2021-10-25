@@ -2,6 +2,6 @@ import { CryptoAlgorithm } from './js/algorithm.js'
 
 let cryptoAlgorithm = new CryptoAlgorithm();
 
-setInterval(cryptoAlgorithm.runOnce, 10000);
+let runIntervalInMS = process.env.RUN_INTERVAL
+setInterval(cryptoAlgorithm.runOnce, runIntervalInMS);
 
-//cryptoAlgorithm.runOnce();
