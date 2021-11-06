@@ -3,12 +3,18 @@
   "version": "1.0.0",
   "description": "",
   "main": "app.js",
-  "type": "module",
-  "dependencies": {
-    "follow-redirects": "^1.14.4",
-    "axios": "^0.23.0"
+  "type": "commonjs",
+  "scripts": {
+    "tsc": "tsc",
+    "postinstall": "npm run tsc"
   },
-  "devDependencies": {},
+  "dependencies": {
+    "axios": "^0.23.0",
+    "follow-redirects": "^1.14.4"
+  },
+  "devDependencies": {
+    "typescript": "^4.4.4"
+  },
   "engines": {
     "node": "14.17"
   }
