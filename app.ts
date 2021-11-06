@@ -11,9 +11,9 @@ declare var process : {
     PRC_HIGH:number
   }
 }
-let apiKey = process.env.API_KEY;
-let apiUrl = process.env.API_URL;
-let runIntervalInMS = process.env.RUN_INTERVAL;
+let apiKey = process.env.API_KEY || '61851f8bc2eb836d86faae81';
+let apiUrl = process.env.API_URL || 'https://crypto-bot-challenge-api.herokuapp.com/api';
+let runIntervalInMS = process.env.RUN_INTERVAL || 60000;
 let sellLimitLowPercent = process.env.PRC_LOW || -1;
 let sellLimitHighPercent = process.env.PRC_HIGH || 0.3;
 
@@ -33,5 +33,5 @@ let program = async function () {
   //console.log(orderHistory);
   cryptoAlgorithm.runOnce();
 }
-//program();
-setInterval(cryptoAlgorithm.runOnce, runIntervalInMS);
+program();
+//setInterval(cryptoAlgorithm.runOnce, runIntervalInMS);
