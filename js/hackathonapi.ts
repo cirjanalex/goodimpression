@@ -5,7 +5,7 @@ import { Account } from "./models/account";
 import { Order } from "./models/orderHistory";
 import { Symbols } from "./models/symbols"
 
-export class Api {
+export class HackathonApi {
     apiUrl: string;
 
     constructor(apiKey: any, apiUrl: any) {
@@ -42,7 +42,7 @@ export class Api {
 
     async orderHistory(): Promise<Array<Order>> {
         return this.get('/trading/orderHistory')
-            .then((response) => response.data as Array<Order>);
+            .then((response: any) => response.data.map((d: any) => Order.parse(d)));
     }
 
     async reset(params: any) {
@@ -50,12 +50,12 @@ export class Api {
             .then((response) => response.data);
     }
 
-    async buy(symbol: Symbols, amount: number) : Promise<boolean> {
+    async buy(symbol: Symbols, amount: number): Promise<boolean> {
         return this.order({ symbol: Symbols[symbol], side: 'BUY', quantity: amount });
     }
 
-    
-    async sell(symbol: Symbols, amount: number) : Promise<boolean> {
+
+    async sell(symbol: Symbols, amount: number): Promise<boolean> {
         return this.order({ symbol: Symbols[symbol], side: 'SELL', quantity: amount });
     }
 

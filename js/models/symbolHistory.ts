@@ -15,6 +15,6 @@ export class SymbolHistory {
   }
 
   static parse(data: any): SymbolHistory {
-    return new SymbolHistory(new Date(data[0]), data[1], data[2], data[3], data[4]);
+    return new SymbolHistory(new Date(data[0]), Number(data[1]), Number(data[2]), Number(data[3]), Number(data[4]));
   }
 }
