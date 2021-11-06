@@ -23,8 +23,10 @@ let program = async function () {
   //console.log(btcPrice);
   //var prices = await api.prices();
   //console.log(prices);
-  var account = await api.account();
-  console.log(account);
+  //var account = await api.account();
+  //console.log(account);
+  //var orderHistory = await api.orderHistory();
+  //console.log(orderHistory);
 }
 program();
 //setInterval(cryptoAlgorithm.runOnce, runIntervalInMS);

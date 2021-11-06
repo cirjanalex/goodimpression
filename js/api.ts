@@ -1,7 +1,9 @@
 import axios from "axios";
 import { Price } from "./models/price";
 import { SymbolHistory } from "./models/symbolHistory";
-import { Account } from "./models/account"
+import { Account } from "./models/account";
+import { Order } from "./models/orderHistory";
+import { Symbols } from "./models/symbols"
 
 export class Api {
     apiUrl: string;
@@ -38,9 +40,9 @@ export class Api {
             .then((response) => response.data as Account);
     }
 
-    async orderHistory() {
+    async orderHistory(): Promise<Array<Order>> {
         return this.get('/trading/orderHistory')
-            .then((response) => response.data);
+            .then((response) => response.data as Array<Order>);
     }
 
     async reset(params: any) {
@@ -48,9 +50,18 @@ export class Api {
             .then((response) => response.data);
     }
 
-    async order(params: any) {
+    async buy(symbol: Symbols, amount: number) : Promise<boolean> {
+        return this.order({ symbol: Symbols[symbol], side: 'BUY', quantity: amount });
+    }
+
+    
+    async sell(symbol: Symbols, amount: number) : Promise<boolean> {
+        return this.order({ symbol: Symbols[symbol], side: 'SELL', quantity: amount });
+    }
+
+    async order(params: any): Promise<boolean> {
         return this.post('/trading/order', params)
-            .then((response) => response.data);
+            .then((response: any) => response.data.order === 'sucess');
     }
 
     async get(path: string, data: any = undefined) {
