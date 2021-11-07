@@ -14,6 +14,7 @@ export class CryptoAlgorithm {
     trailingStopPercentBackStep: number;
 
     previousTrailingStopPercent: number | null;
+    previousTrailingBuyInfo: { symbol: string, previousValue: number } | null;
 
     constructor(hackathonApi: HackathonApi, sellLimitLowPercent: number, sellLimitHighPercent: number, buyLimitAverage: number, buyLimitMax: number, trailingStopPercentBackStep: number, enableTrailingStop: boolean) {
         this.hackathonApi = hackathonApi;
@@ -24,6 +25,7 @@ export class CryptoAlgorithm {
         this.trailingStopPercentBackStep = trailingStopPercentBackStep;
         this.enableTrailingStop = enableTrailingStop;
         this.previousTrailingStopPercent = null;
+        this.previousTrailingBuyInfo = null;
     }
 
     private async getLatestOrder(): Promise<Order | null> {
@@ -93,32 +95,68 @@ export class CryptoAlgorithm {
         return null;
     }
 
+    private processTrailingBuy(symbol: string, currentPrice: number): boolean {
+        if (this.previousTrailingBuyInfo == null) {
+            this.previousTrailingBuyInfo = {
+                symbol: symbol,
+                previousValue: currentPrice
+            }
+            return false;
+        }
+
+        if (this.previousTrailingBuyInfo.previousValue < currentPrice) {
+            this.previousTrailingBuyInfo.previousValue = currentPrice;
+            return false;
+        }
+
+        if (((currentPrice - this.previousTrailingBuyInfo.previousValue) / currentPrice) * 100 > 0.1) {
+            return true;
+        }
+
+        return false;
+    }
+
     private async processBuyStrategy() {
-        let symbolToBuy = await this.getSymbolToBuy();
+        let symbolToBuy: string | null;
+        if (this.previousTrailingBuyInfo != null) {
+            symbolToBuy = this.previousTrailingBuyInfo.symbol;
+        }
+        else {
+            symbolToBuy = await this.getSymbolToBuy();
+        }
+
         if (symbolToBuy !== null) {
             console.log(`Found a symbol to buy, it's ${symbolToBuy}`);
-            var account = await this.hackathonApi.account();
             var price = await (await this.hackathonApi.price({ symbol: symbolToBuy })).value;
-            var amountOfUSDTAvailable = account.symbols.find((s) => {
-                return s.name === "USDT";
-            });
-            var amountToBuy = (amountOfUSDTAvailable!.quantity * 0.9) / price;
-            console.log(`Trying to buy ${amountToBuy} of ${symbolToBuy}`);
-            var buyResult = await this.hackathonApi.buy(Symbols[symbolToBuy as SymbolString], amountToBuy);
-            console.log(`Buying was ${buyResult ? "successfull" : "unsuccessfull"}`);
+
+            if (this.processTrailingBuy(symbolToBuy!, price)) {
+                var account = await this.hackathonApi.account();
+                var amountOfUSDTAvailable = account.symbols.find((s) => {
+                    return s.name === "USDT";
+                });
+                var amountToBuy = (amountOfUSDTAvailable!.quantity * 0.9) / price;
+                console.log(`Trying to buy ${amountToBuy} of ${symbolToBuy}`);
+                var buyResult = await this.hackathonApi.buy(Symbols[symbolToBuy as SymbolString], amountToBuy);
+                console.log(`Buying was ${buyResult ? "successfull" : "unsuccessfull"}`);
+            }
+            else {
+                console.log(`Trailing buy ${symbolToBuy} ${price} WAIT`);
+            }
         }
     }
+
+
     private processTrailingStop(currentPercentage: number): boolean {
         if (this.previousTrailingStopPercent === null) {
             this.previousTrailingStopPercent = currentPercentage;
-        }        
+        }
 
         if (currentPercentage - this.previousTrailingStopPercent < - this.trailingStopPercentBackStep) {
             this.previousTrailingStopPercent = null;
             return true;
         }
         else {
-            if(currentPercentage > this.previousTrailingStopPercent) {
+            if (currentPercentage > this.previousTrailingStopPercent) {
                 this.trailingStopPercentBackStep = currentPercentage;
             }
             return false;
@@ -135,16 +173,19 @@ export class CryptoAlgorithm {
             var sellResult = await this.hackathonApi.sell(latestOrder.symbol, latestOrder.quantity);
             console.log(`Selling result was ${sellResult ? 'successfull' : 'unsuccessfull'}`);
         }
-        var currentPrice = (await this.hackathonApi.prices()).find((price)=> price.name === Symbols[latestOrder.symbol])!.value;
+        var currentPrice = (await this.hackathonApi.prices()).find((price) => price.name === Symbols[latestOrder.symbol])!.value;
         //var currentPrice = (await this.hackathonApi.price({ symbol: Symbols[latestOrder.symbol] })).value;
         var openPrice = latestOrder.price;
         var diffPrice = currentPrice - openPrice;
         var currentPercentage = (diffPrice / openPrice) * 100;
         console.log(`Current percentage is ${currentPercentage}, limits are: low ${this.sellLimitLowPercent} and high ${this.sellLimitHighPercent}`);
-        if (currentPercentage < this.sellLimitLowPercent || currentPercentage > this.sellLimitHighPercent || this.previousTrailingStopPercent != null) {
+
+        let overTheUpperLimitOrTrailing = currentPercentage > this.sellLimitHighPercent || this.previousTrailingStopPercent != null;
+        let underTheLowerLimit = currentPercentage < this.sellLimitLowPercent;
+        if (underTheLowerLimit || overTheUpperLimitOrTrailing) {
 
             let shouldSell = true;
-            if ((currentPercentage > this.sellLimitHighPercent || this.previousTrailingStopPercent != null) && this.enableTrailingStop) {
+            if (overTheUpperLimitOrTrailing && this.enableTrailingStop) {
                 shouldSell = this.processTrailingStop(currentPercentage);
                 console.log(`Trailing stop result: ${shouldSell ? 'SELL' : 'WAIT'}}`);
             }
@@ -157,6 +198,10 @@ export class CryptoAlgorithm {
     }
 
     async runOnce() {
+        // hack for update
+        // to remove
+        await this.hackathonApi.prices();
+
         var latestOrder = await this.getLatestOrder();
         if (latestOrder != null && latestOrder.side == 'BUY') {
             await this.processSellStrategy(latestOrder);
