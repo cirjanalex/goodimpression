@@ -10,13 +10,20 @@ export class CryptoAlgorithm {
     sellLimitHighPercent: number;
     buyLimitAverage: number;
     buyLimitMax: number;
+    enableTrailingStop: boolean;
+    trailingStopPercentBackStep: number;
 
-    constructor(hackathonApi: HackathonApi, sellLimitLowPercent: number, sellLimitHighPercent: number, buyLimitAverage: number, buyLimitMax: number) {
+    previousTrailingStopPercent: number | null;
+
+    constructor(hackathonApi: HackathonApi, sellLimitLowPercent: number, sellLimitHighPercent: number, buyLimitAverage: number, buyLimitMax: number, trailingStopPercentBackStep: number, enableTrailingStop: boolean) {
         this.hackathonApi = hackathonApi;
         this.sellLimitHighPercent = sellLimitHighPercent;
         this.sellLimitLowPercent = sellLimitLowPercent;
         this.buyLimitAverage = buyLimitAverage;
         this.buyLimitMax = buyLimitMax;
+        this.trailingStopPercentBackStep = trailingStopPercentBackStep;
+        this.enableTrailingStop = enableTrailingStop;
+        this.previousTrailingStopPercent = null;
     }
 
     private async getLatestOrder(): Promise<Order | null> {
@@ -101,6 +108,18 @@ export class CryptoAlgorithm {
             console.log(`Buying was ${buyResult ? "successfull" : "unsuccessfull"}`);
         }
     }
+    private processTrailingStop(currentPercentage: number): boolean {
+        if (this.previousTrailingStopPercent === null) {
+            this.previousTrailingStopPercent = currentPercentage;
+        }
+        if (currentPercentage - this.previousTrailingStopPercent < - this.trailingStopPercentBackStep) {
+            this.previousTrailingStopPercent = null;
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
 
     private async processSellStrategy(latestOrder: Order) {
         var dateNow = new Date();
@@ -119,9 +138,17 @@ export class CryptoAlgorithm {
         var currentPercentage = (diffPrice / openPrice) * 100;
         console.log(`Current percentage is ${currentPercentage}, limits are: low ${this.sellLimitLowPercent} and high ${this.sellLimitHighPercent}`);
         if (currentPercentage < this.sellLimitLowPercent || currentPercentage > this.sellLimitHighPercent) {
-            console.log("Selling because of limit reached");
-            var sellResult = await this.hackathonApi.sell(latestOrder.symbol, latestOrder.quantity);
-            console.log(`Selling result was ${sellResult ? 'successfull' : 'unsuccessfull'}`);
+
+            let shouldSell = true;
+            if (currentPercentage > this.sellLimitHighPercent && this.enableTrailingStop) {
+                shouldSell = this.processTrailingStop(currentPercentage);
+                console.log(`Trailing stop result: ${shouldSell ? 'SELL' : 'WAIT'}}`);
+            }
+            if (shouldSell) {
+                console.log("Selling because of limit reached");
+                var sellResult = await this.hackathonApi.sell(latestOrder.symbol, latestOrder.quantity);
+                console.log(`Selling result was ${sellResult ? 'successfull' : 'unsuccessfull'}`);
+            }
         }
     }
 
