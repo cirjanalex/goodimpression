@@ -111,12 +111,16 @@ export class CryptoAlgorithm {
     private processTrailingStop(currentPercentage: number): boolean {
         if (this.previousTrailingStopPercent === null) {
             this.previousTrailingStopPercent = currentPercentage;
-        }
+        }        
+
         if (currentPercentage - this.previousTrailingStopPercent < - this.trailingStopPercentBackStep) {
             this.previousTrailingStopPercent = null;
             return true;
         }
         else {
+            if(currentPercentage > this.previousTrailingStopPercent) {
+                this.trailingStopPercentBackStep = currentPercentage;
+            }
             return false;
         }
     }
