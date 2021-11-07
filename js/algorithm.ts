@@ -141,10 +141,10 @@ export class CryptoAlgorithm {
         var diffPrice = currentPrice - openPrice;
         var currentPercentage = (diffPrice / openPrice) * 100;
         console.log(`Current percentage is ${currentPercentage}, limits are: low ${this.sellLimitLowPercent} and high ${this.sellLimitHighPercent}`);
-        if (currentPercentage < this.sellLimitLowPercent || currentPercentage > this.sellLimitHighPercent) {
+        if (currentPercentage < this.sellLimitLowPercent || currentPercentage > this.sellLimitHighPercent || this.previousTrailingStopPercent != null) {
 
             let shouldSell = true;
-            if (currentPercentage > this.sellLimitHighPercent && this.enableTrailingStop) {
+            if ((currentPercentage > this.sellLimitHighPercent || this.previousTrailingStopPercent != null) && this.enableTrailingStop) {
                 shouldSell = this.processTrailingStop(currentPercentage);
                 console.log(`Trailing stop result: ${shouldSell ? 'SELL' : 'WAIT'}}`);
             }
