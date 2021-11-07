@@ -135,8 +135,8 @@ export class CryptoAlgorithm {
             var sellResult = await this.hackathonApi.sell(latestOrder.symbol, latestOrder.quantity);
             console.log(`Selling result was ${sellResult ? 'successfull' : 'unsuccessfull'}`);
         }
-
-        var currentPrice = (await this.hackathonApi.price({ symbol: Symbols[latestOrder.symbol] })).value;
+        var currentPrice = (await this.hackathonApi.prices()).find((price)=> price.name === Symbols[latestOrder.symbol])!.value;
+        //var currentPrice = (await this.hackathonApi.price({ symbol: Symbols[latestOrder.symbol] })).value;
         var openPrice = latestOrder.price;
         var diffPrice = currentPrice - openPrice;
         var currentPercentage = (diffPrice / openPrice) * 100;
