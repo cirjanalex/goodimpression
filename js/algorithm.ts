@@ -8,11 +8,15 @@ export class CryptoAlgorithm {
     hackathonApi: HackathonApi;
     sellLimitLowPercent: number;
     sellLimitHighPercent: number;
+    buyLimitAverage: number;
+    buyLimitMax: number;
 
-    constructor(hackathonApi: HackathonApi, sellLimitLowPercent: number, sellLimitHighPercent: number) {
+    constructor(hackathonApi: HackathonApi, sellLimitLowPercent: number, sellLimitHighPercent: number, buyLimitAverage: number, buyLimitMax: number) {
         this.hackathonApi = hackathonApi;
         this.sellLimitHighPercent = sellLimitHighPercent;
         this.sellLimitLowPercent = sellLimitLowPercent;
+        this.buyLimitAverage = buyLimitAverage;
+        this.buyLimitMax = buyLimitMax;
     }
 
     private async getLatestOrder(): Promise<Order | null> {
@@ -68,19 +72,15 @@ export class CryptoAlgorithm {
         maxAverage = maxAverage / results.length;
         console.log(`Global averages avg: ${average} maxAvg:${maxAverage}`);
         var priorityList = results.sort((r1, r2) => {
-            if ((average - r1.currentVsPreviousAverage) > (average - r2.currentVsPreviousAverage)) return -1;
+            let localAvg = Math.abs(average);
+            if (Math.abs(localAvg - Math.abs(r1.currentVsPreviousAverage)) < Math.abs(localAvg - Math.abs(r2.currentVsPreviousAverage))) return -1;
             else return 1;
         });
         for (let i = 0; i < priorityList.length; i++) {
             let elem = priorityList[i];
-            if (elem.currentVsPreviousAverage > 0) {
-                console.log(`Averages are too high ${elem.currentVsPreviousAverage} ${elem.symbol} not continuing with the buy`);
-                //break;
-            }
-            else {
-                if (elem.currentVsPreviousAverage < -0.25 && elem.currentVsPreviousMax < -0.75) {
-                    return elem.symbol;
-                }
+            console.log('avg' + elem.currentVsPreviousAverage);
+            if (elem.currentVsPreviousAverage < this.buyLimitAverage && elem.currentVsPreviousMax < this.buyLimitMax) {
+                return elem.symbol;
             }
         }
         return null;
