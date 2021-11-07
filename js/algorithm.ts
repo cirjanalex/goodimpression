@@ -158,7 +158,7 @@ export class CryptoAlgorithm {
         }
         else {
             if (currentPercentage > this.previousTrailingStopPercent) {
-                this.trailingStopPercentBackStep = currentPercentage;
+                this.previousTrailingStopPercent = currentPercentage;
             }
             return false;
         }
