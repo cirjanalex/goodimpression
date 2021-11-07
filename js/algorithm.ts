@@ -150,7 +150,7 @@ export class CryptoAlgorithm {
         if (this.previousTrailingStopPercent === null) {
             this.previousTrailingStopPercent = currentPercentage;
         }
-
+        console.log(`Trailing stop, current: ${currentPercentage}, previous: ${this.previousTrailingStopPercent}, backStep: ${this.trailingStopPercentBackStep}`);
         if (currentPercentage - this.previousTrailingStopPercent < - this.trailingStopPercentBackStep) {
             this.previousTrailingStopPercent = null;
             return true;
