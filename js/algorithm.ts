@@ -110,6 +110,7 @@ export class CryptoAlgorithm {
         }
 
         if (((currentPrice - this.previousTrailingBuyInfo.previousValue) / currentPrice) * 100 > 0.1) {
+            this.previousTrailingBuyInfo = null;
             return true;
         }
 
