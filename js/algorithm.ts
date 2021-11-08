@@ -103,8 +103,8 @@ export class CryptoAlgorithm {
             }
             return false;
         }
-
-        if (this.previousTrailingBuyInfo.previousValue < currentPrice) {
+        console.log(`trailing buy: current ${currentPrice}  previous${this.previousTrailingBuyInfo.previousValue}`);
+        if (currentPrice < this.previousTrailingBuyInfo.previousValue) {            
             this.previousTrailingBuyInfo.previousValue = currentPrice;
             return false;
         }
