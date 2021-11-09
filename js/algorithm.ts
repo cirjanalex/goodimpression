@@ -135,7 +135,7 @@ export class CryptoAlgorithm {
                 var amountOfUSDTAvailable = account.symbols.find((s) => {
                     return s.name === "USDT";
                 });
-                var amountToBuy = (amountOfUSDTAvailable!.quantity * 0.9) / price;
+                var amountToBuy = (amountOfUSDTAvailable!.quantity * 0.98); /// price;
                 console.log(`Trying to buy ${amountToBuy} of ${symbolToBuy}`);
                 var buyResult = await this.hackathonApi.buy(Symbols[symbolToBuy as SymbolString], amountToBuy);
                 console.log(`Buying was ${buyResult ? "successfull" : "unsuccessfull"}`);
