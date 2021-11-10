@@ -70,7 +70,7 @@ export class CryptoAlgorithm {
                 });
             }
         }
-        console.log(results);
+        //console.log(results);
         let average = 0;
         let maxAverage = 0;
         results.forEach(result => {
@@ -87,7 +87,7 @@ export class CryptoAlgorithm {
         });
         for (let i = 0; i < priorityList.length; i++) {
             let elem = priorityList[i];
-            console.log('avg' + elem.currentVsPreviousAverage);
+            console.log('avg: ' + elem.currentVsPreviousAverage);
             if (elem.currentVsPreviousAverage < this.buyLimitAverage && elem.currentVsPreviousMax < this.buyLimitMax) {
                 return elem.symbol;
             }
@@ -128,7 +128,7 @@ export class CryptoAlgorithm {
 
         if (symbolToBuy !== null) {
             console.log(`Found a symbol to buy, it's ${symbolToBuy}`);
-            var price = await (await this.hackathonApi.price({ symbol: symbolToBuy })).value;
+            var price = (await this.hackathonApi.price({ symbol: symbolToBuy })).value;
 
             if (this.processTrailingBuy(symbolToBuy!, price)) {
                 var account = await this.hackathonApi.account();
@@ -193,7 +193,8 @@ export class CryptoAlgorithm {
             }
             if (shouldSell) {
                 console.log("Selling because of limit reached");
-                var sellResult = await this.hackathonApi.sell(latestOrder.symbol, latestOrder.quantity);
+                var quantityToSell = (await this.hackathonApi.account()).symbols.find(s => s.name === Symbols[latestOrder.symbol])?.quantity;
+                var sellResult = await this.hackathonApi.sell(latestOrder.symbol, quantityToSell!);
                 console.log(`Selling result was ${sellResult ? 'successfull' : 'unsuccessfull'}`);
             }
         }
