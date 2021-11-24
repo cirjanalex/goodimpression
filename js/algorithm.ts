@@ -200,11 +200,25 @@ export class CryptoAlgorithm {
         }
     }
 
+
+    async processInconsistentState() {
+        let account = await this.hackathonApi.account();
+        let nonZeroAmounts = account.symbols.filter(s => s.quantity > 0);
+        if(nonZeroAmounts.length > 1) {
+            console.log(`Found ${nonZeroAmounts.length} amounts... Selling`);
+            nonZeroAmounts.forEach(async (value) => {
+                let symbolName = Symbols[value.name as SymbolString];
+                await this.hackathonApi.sell(symbolName, value.quantity);
+            });
+        }
+    }
+
     async runOnce() {
         // hack for update
         // to remove
+        await this.processInconsistentState();
         await this.hackathonApi.prices();
-
+        
         var latestOrder = await this.getLatestOrder();
         if (latestOrder != null && latestOrder.side == 'BUY') {
             await this.processSellStrategy(latestOrder);
